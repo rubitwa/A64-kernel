@@ -31,9 +31,14 @@
 #include <linux/of_net.h>
 #include <linux/io.h>
 
+#include <linux/of.h>
+#include <linux/of_gpio.h>
+
 #include <asm/io.h>
 
 #include "sunxi-gmac.h"
+
+#define GMAC_PHY_POWER  1
 
 #ifndef GMAC_CLK
 #define GMAC_CLK "gmac"
@@ -158,6 +163,9 @@ struct geth_priv {
 
 	spinlock_t lock;
 	spinlock_t tx_lock;
+#ifdef GMAC_PHY_POWER
+	unsigned int power_on_gpio;
+#endif
 };
 
 #ifdef CONFIG_GETH_PHY_POWER
@@ -722,6 +730,39 @@ static const struct dev_pm_ops geth_pm_ops;
  *
  *
  ****************************************************************************/
+#ifdef GMAC_PHY_POWER
+void gmac_phy_power_on(struct geth_priv *priv)
+{
+	if (!priv)
+		return;
+	
+	if (gpio_is_valid(priv->power_on_gpio)) {
+		printk("GPIO %d valid\n", priv->power_on_gpio);
+		gpio_request(priv->power_on_gpio, NULL);
+		gpio_direction_output(priv->power_on_gpio, 1);
+		__gpio_set_value(priv->power_on_gpio, 1);
+		mdelay(200);
+	} else {
+		printk("Request GPIO %d\n", priv->power_on_gpio);
+		__gpio_set_value(priv->power_on_gpio, 1);
+		mdelay(200);
+	}
+	printk("Current_V is : %d\n", __gpio_get_value(priv->power_on_gpio));
+}
+
+void gmac_phy_power_disable(struct geth_priv *priv)
+{
+	if (!priv)
+		return;
+
+	if (priv->power_on_gpio) {
+		__gpio_set_value(priv->power_on_gpio, 0);
+	}
+	printk("Current_V is : %d\n", __gpio_get_value(priv->power_on_gpio));
+	return;
+}
+#endif
+
 static void geth_check_addr(struct net_device *ndev, unsigned char *mac)
 {
 	int i;
@@ -858,6 +899,9 @@ static int geth_open(struct net_device *ndev)
 {
 	struct geth_priv *priv = netdev_priv(ndev);
 	int ret = 0;
+#ifdef GMAC_PHY_POWER
+	gmac_phy_power_on(priv);
+#endif
 
 	ret = geth_power_on(priv);
 	if (ret) {
@@ -944,6 +988,9 @@ static int geth_stop(struct net_device *ndev)
 
 	geth_clk_disable(priv);
 	geth_power_off(priv);
+#ifdef GMAC_PHY_POWER
+	gmac_phy_power_disable(priv);
+#endif
 
 	netif_tx_lock_bh(ndev);
 	/* Release the DMA TX/RX socket buffers */
@@ -1545,6 +1592,11 @@ static int geth_script_parse(struct platform_device *pdev)
 
 	if (priv->phy_ext == INT_PHY)
 		priv->phy_interface = PHY_INTERFACE_MODE_MII;
+
+#ifdef GMAC_PHY_POWER
+	priv->power_on_gpio = of_get_named_gpio(np, "phy_power_on", 0);
+#endif
+
 #endif
 	if(!of_property_read_u32(np, "tx-delay", &value))
 		tx_delay = value;
