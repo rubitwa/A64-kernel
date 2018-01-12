@@ -38,7 +38,8 @@
 
 #include "sunxi-gmac.h"
 
-#define GMAC_PHY_POWER  1
+#define PHY_POWER_ON  1
+//#define PINE64_INIT_EPHY
 
 #ifndef GMAC_CLK
 #define GMAC_CLK "gmac"
@@ -163,7 +164,7 @@ struct geth_priv {
 
 	spinlock_t lock;
 	spinlock_t tx_lock;
-#ifdef GMAC_PHY_POWER
+#ifdef PHY_POWER_ON
 	unsigned int power_on_gpio;
 #endif
 };
@@ -356,22 +357,6 @@ static void geth_adjust_link(struct net_device *ndev)
 			priv->link = phydev->link;
 		}
 
-#if 0
-		/* Fix the A version chip mode, it not work at 1000M mode */
-		if (sunxi_get_soc_ver() == SUN9IW1P1_REV_A
-				&& priv->speed == SPEED_1000
-				&& phydev->link == 1){
-			priv->speed = 0;
-			priv->link = 0;
-			priv->duplex = -1;
-			phydev->speed = SPEED_100;
-			phydev->autoneg = AUTONEG_DISABLE;
-			phydev->advertising &= ~ADVERTISED_Autoneg;
-			phydev->state = PHY_UP;
-			new_state = 0;
-		}
-#endif
-
 		if (new_state)
 			sunxi_set_link_mode(priv->base, priv->duplex, priv->speed);
 
@@ -460,13 +445,12 @@ static int geth_phy_init(struct net_device *ndev)
 		}
 
 #endif
-#ifdef CONFIG_ARCH_SUN50IW1P1
-	//init ephy
-	printk("init ephy for pine64\n");
-	phy_write(phydev, 0x1f, 0x0007);//sel ext page
-	phy_write(phydev, 0x1e, 0x00a4);//sel page 164
-	phy_write(phydev, 0x1c, 0xb591);//only enable TX
-	phy_write(phydev, 0x1f, 0x0000);//sel page 0
+#ifdef PINE64_INIT_EPHY
+		//init ephy
+		phy_write(phydev, 0x1f, 0x0007);//sel ext page
+		phy_write(phydev, 0x1e, 0x00a4);//sel page 164
+		phy_write(phydev, 0x1c, 0xb591);//only enable TX
+		phy_write(phydev, 0x1f, 0x0000);//sel page 0
 #endif
 
 		phy_write(phydev, MII_BMCR, BMCR_RESET);
@@ -730,7 +714,7 @@ static const struct dev_pm_ops geth_pm_ops;
  *
  *
  ****************************************************************************/
-#ifdef GMAC_PHY_POWER
+#ifdef PHY_POWER_ON
 void gmac_phy_power_on(struct geth_priv *priv)
 {
 	if (!priv)
@@ -772,9 +756,11 @@ static void geth_check_addr(struct net_device *ndev, unsigned char *mac)
 		for (i=0; i<ETH_ALEN; i++, p++)
 			ndev->dev_addr[i] = simple_strtoul(p, &p, 16);
 
+#if 0
 		if (!is_valid_ether_addr(ndev->dev_addr)) {
 			sunxi_get_chipid_mac_addr(ndev->dev_addr);
 		}
+#endif
 
 		if (!is_valid_ether_addr(ndev->dev_addr)) {
 			random_ether_addr(ndev->dev_addr);
@@ -899,7 +885,8 @@ static int geth_open(struct net_device *ndev)
 {
 	struct geth_priv *priv = netdev_priv(ndev);
 	int ret = 0;
-#ifdef GMAC_PHY_POWER
+
+#ifdef PHY_POWER_ON
 	gmac_phy_power_on(priv);
 #endif
 
@@ -988,7 +975,7 @@ static int geth_stop(struct net_device *ndev)
 
 	geth_clk_disable(priv);
 	geth_power_off(priv);
-#ifdef GMAC_PHY_POWER
+#ifdef PHY_POWER_ON
 	gmac_phy_power_disable(priv);
 #endif
 
@@ -1568,20 +1555,6 @@ static int geth_script_parse(struct platform_device *pdev)
 		power_tb[cnt].name = kstrndup((char *)ptr, len, GFP_KERNEL);
 	}
 #endif
-
-#if 0
-	/* Default mode is PHY_INTERFACE_MODE_RGMII */
-	priv->phy_interface = PHY_INTERFACE_MODE_RGMII;
-	type = script_get_item((char *)dev_name(&pdev->dev), "gmac_mode", &item);
-	if (SCIRPT_ITEM_VALUE_TYPE_STR == type) {
-		if (!strncasecmp((char *)item.val, "MII", 3))
-			priv->phy_interface = PHY_INTERFACE_MODE_MII;
-		else if(!strncasecmp((char *)item.val, "GMII", 4))
-			priv->phy_interface = PHY_INTERFACE_MODE_GMII;
-		else if(!strncasecmp((char *)item.val, "RMII", 4))
-			priv->phy_interface = PHY_INTERFACE_MODE_RMII;
-	}
-#endif
 	priv->phy_interface = of_get_phy_mode(np);
 	if (priv->phy_interface != PHY_INTERFACE_MODE_MII
 			&& priv->phy_interface != PHY_INTERFACE_MODE_RGMII
@@ -1593,7 +1566,7 @@ static int geth_script_parse(struct platform_device *pdev)
 	if (priv->phy_ext == INT_PHY)
 		priv->phy_interface = PHY_INTERFACE_MODE_MII;
 
-#ifdef GMAC_PHY_POWER
+#ifdef PHY_POWER_ON
 	priv->power_on_gpio = of_get_named_gpio(np, "phy_power_on", 0);
 #endif
 
