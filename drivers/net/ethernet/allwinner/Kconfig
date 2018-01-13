@@ -78,21 +78,18 @@ config GETH_PHY_POWER
 config MAC_ADDRESS_AUTOGEN
 	bool "Auto-generate mac address"
 	depends on SUNXI_GMAC
-	default y
 	---help---
 	 Auto-generate mac address from chipid serial for ethernet.
 
 config INIT_EPHY_PINE64
 	bool "Init ephy for Pine64"
 	depends on SUNXI_GMAC
-	default y
 	---help---
 	 Init ephy for Pine64.
 
 config PHY_POWER_ON_OPIWIN
 	bool "PHY power on for OrangePi Win / Win Plus"
 	depends on SUNXI_GMAC && OF_GPIO
-	default y
 	---help---
 	 PHY power on for OrangePi Win / Win Plus.
 endif
