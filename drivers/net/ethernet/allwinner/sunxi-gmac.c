@@ -442,7 +442,7 @@ static int geth_phy_init(struct net_device *ndev)
 		}
 
 #endif
-#if defined(INIT_EPHY_PINE64)
+#if defined(CONFIG_INIT_EPHY_PINE64)
 		//init ephy
 		phy_write(phydev, 0x1f, 0x0007);//sel ext page
 		phy_write(phydev, 0x1e, 0x00a4);//sel page 164
@@ -753,7 +753,7 @@ static void geth_check_addr(struct net_device *ndev, unsigned char *mac)
 		for (i=0; i<ETH_ALEN; i++, p++)
 			ndev->dev_addr[i] = simple_strtoul(p, &p, 16);
 
-#if defined(MAC_ADDRESS_AUTOGEN)
+#if defined(CONFIG_MAC_ADDRESS_AUTOGEN)
 		if (!is_valid_ether_addr(ndev->dev_addr)) {
 			sunxi_get_chipid_mac_addr(ndev->dev_addr);
 		}
