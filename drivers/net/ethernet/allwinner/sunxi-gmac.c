@@ -30,16 +30,13 @@
 #include <linux/regulator/consumer.h>
 #include <linux/of_net.h>
 #include <linux/io.h>
-
+#if defined(CONFIG_PHY_POWER_ON_OPIWIN)
 #include <linux/of.h>
 #include <linux/of_gpio.h>
-
+#endif
 #include <asm/io.h>
 
 #include "sunxi-gmac.h"
-
-#define PHY_POWER_ON  1
-//#define PINE64_INIT_EPHY
 
 #ifndef GMAC_CLK
 #define GMAC_CLK "gmac"
@@ -164,7 +161,7 @@ struct geth_priv {
 
 	spinlock_t lock;
 	spinlock_t tx_lock;
-#ifdef PHY_POWER_ON
+#if defined(CONFIG_PHY_POWER_ON_OPIWIN)
 	unsigned int power_on_gpio;
 #endif
 };
@@ -445,7 +442,7 @@ static int geth_phy_init(struct net_device *ndev)
 		}
 
 #endif
-#ifdef PINE64_INIT_EPHY
+#if defined(INIT_EPHY_PINE64)
 		//init ephy
 		phy_write(phydev, 0x1f, 0x0007);//sel ext page
 		phy_write(phydev, 0x1e, 0x00a4);//sel page 164
@@ -714,7 +711,7 @@ static const struct dev_pm_ops geth_pm_ops;
  *
  *
  ****************************************************************************/
-#ifdef PHY_POWER_ON
+#if defined(CONFIG_PHY_POWER_ON_OPIWIN)
 void gmac_phy_power_on(struct geth_priv *priv)
 {
 	if (!priv)
@@ -756,7 +753,7 @@ static void geth_check_addr(struct net_device *ndev, unsigned char *mac)
 		for (i=0; i<ETH_ALEN; i++, p++)
 			ndev->dev_addr[i] = simple_strtoul(p, &p, 16);
 
-#if 0
+#if defined(MAC_ADDRESS_AUTOGEN)
 		if (!is_valid_ether_addr(ndev->dev_addr)) {
 			sunxi_get_chipid_mac_addr(ndev->dev_addr);
 		}
@@ -886,7 +883,7 @@ static int geth_open(struct net_device *ndev)
 	struct geth_priv *priv = netdev_priv(ndev);
 	int ret = 0;
 
-#ifdef PHY_POWER_ON
+#if defined(CONFIG_PHY_POWER_ON_OPIWIN)
 	gmac_phy_power_on(priv);
 #endif
 
@@ -975,7 +972,7 @@ static int geth_stop(struct net_device *ndev)
 
 	geth_clk_disable(priv);
 	geth_power_off(priv);
-#ifdef PHY_POWER_ON
+#if defined(CONFIG_PHY_POWER_ON_OPIWIN)
 	gmac_phy_power_disable(priv);
 #endif
 
@@ -1566,7 +1563,7 @@ static int geth_script_parse(struct platform_device *pdev)
 	if (priv->phy_ext == INT_PHY)
 		priv->phy_interface = PHY_INTERFACE_MODE_MII;
 
-#ifdef PHY_POWER_ON
+#if defined(CONFIG_PHY_POWER_ON_OPIWIN)
 	priv->power_on_gpio = of_get_named_gpio(np, "phy_power_on", 0);
 #endif
 
