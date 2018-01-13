@@ -3114,8 +3114,8 @@
 			led_num = <0x1>;
 			led1 = <0x30 0x7 0xb 0x1 0xffffffff 0xffffffff 0x0>;
 			led1_trigger = "heartbeat";
-			led2 = <0x30 0x7 0x3 0x5 0xffffffff 0xffffffff 0x0>; /* PD5 (gpio phys-37) */
-			led2_trigger = "default-on";
+			led2 = <0x30 0x3 0x5 0x1 0xffffffff 0xffffffff 0x0>; /* PD5 (gpio phys-37) */
+			led2_trigger = "default-on"; // or mmc0, look drivers/leds/trigger
 			led_power_num = <0x1>;
 			led1_power = "vcc-led";
 			led1_power_vol = <0xaf0>; /* 2800, default 1800 */
