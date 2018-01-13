@@ -2604,7 +2604,7 @@
 			regulator7 = "axp81x_dcdc7 none";
 			regulator8 = "axp81x_rtc none";
 			regulator9 = "axp81x_aldo1 none vdd-csi-led iovdd-csi vcc-pe";
-			regulator10 = "axp81x_aldo2 none vcc-pl";
+			regulator10 = "axp81x_aldo2 none vcc-pl vcc-ir vcc-led";
 			regulator11 = "axp81x_aldo3 none vcc-avcc vcc-pll";
 			regulator12 = "axp81x_dldo1 none vcc-hdmi-33";
 			regulator13 = "axp81x_dldo2 none vcc-mipi vcc-wifi";
@@ -3105,6 +3105,20 @@
 			status = "disabled";
 			lsm9ds0 = <0x1>;
 			lsm303d = <0x0>;
+		};
+
+		led_para {
+			device_type = "led_para";
+			compatible = "allwinner,sunxi-leds";
+			led_used = <0x1>;
+			led_num = <0x1>;
+			led1 = <0x30 0x7 0xb 0x1 0xffffffff 0xffffffff 0x0>;
+			led1_trigger = "heartbeat";
+			led2 = <0x30 0x7 0x3 0x5 0xffffffff 0xffffffff 0x0>; /* PD5 (gpio phys-37) */
+			led2_trigger = "default-on";
+			led_power_num = <0x1>;
+			led1_power = "vcc-led";
+			led1_power_vol = <0xaf0>; /* 2800, default 1800 */
 		};
 
 		gpio_para {
