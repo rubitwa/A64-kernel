@@ -1619,7 +1619,7 @@
 			pinctrl-names = "default";
 			pinctrl-0 = <0x11>;
 			clocks = <0x6 0x12>;
-			supply = "vcc-pl";
+			supply = "vcc-ir";
 			ir_power_key_code = <0x4d>;
 			ir_addr_code = <0x4040>;
 			status = "okay";
