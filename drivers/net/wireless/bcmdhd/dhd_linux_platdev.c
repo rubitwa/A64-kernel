@@ -18,7 +18,7 @@
 #include <dhd_bus.h>
 #include <dhd_linux.h>
 #include <wl_android.h>
-#if defined(CONFIG_WIFI_CONTROL_FUNC)
+#if defined(CONFIG_WIFI_CONTROL_FUNC) && !defined(CUSTOMER_HW)
 #include <linux/wlan_plat.h>
 #endif
 #ifdef CONFIG_DTS
